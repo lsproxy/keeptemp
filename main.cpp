@@ -55,68 +55,64 @@ void draw_digital(Pixel pixel, char* str, uint var)
     m_image.print(var);
 } 
 
-//灯类,测试完毕，OK
-class Light
+//类,测试完毕，OK
+class Sensor
 {
 public:
-    Light(const uint& pin);
-    Light(){}
+    Sensor(const uint& pin);
+    Sensor(){}
+    ~Sensor();
 
-    void on();      //亮
-    void off();     //暗
-    void flash();   //闪烁
+    void on();      //开
+    void off();     //关
 
-    Switch value(); //获取当前led灯状态
-    void set_pin(const uint& pin);  //设置led灯端口
+    Switch value(); //获取当前Sensor状态
+    void set_pin(const uint& pin);  //设置Sensor端口
 
 private:
     uint m_pin;
     Switch status;
 };
 
-Light::Light(const uint& pin)
+
+Sensor::Sensor(const uint& pin)
 {
     set_pin(pin);
+    off();
+}
+
+Sensor::~Sensor()
+{
+    off();
 }
 
 void 
-Light::on() 
+Sensor::on() 
 {
-    digitalWrite(m_pin, LOW);
+    digitalWrite(m_pin, HIGH);
     status = ON;
 }
 
 void 
-Light::off()
+Sensor::off()
 {
-    digitalWrite(m_pin, HIGH);
+    digitalWrite(m_pin, LOW);
     status = OFF;
 }
 
 void 
-Light::set_pin(const uint& pin)
+Sensor::set_pin(const uint& pin)
 {
     m_pin = pin;
     pinMode(pin,OUTPUT);
-    digitalWrite(m_pin,HIGH);
-    status = OFF;
+    off();
 }
 
 Switch 
-Light::value() 
+Sensor::value() 
 {
     return status;
 }
-
-void 
-Light::flash()
-{
-    on();
-    delay(300);
-    off();
-    delay(300);
-}
-
 
 
 //按键开关
@@ -167,9 +163,9 @@ public:
     TempEngine();
     ~TempEngine();
     void show();
-    void bind_light(uint red, uint green);
+    void bind_sensor(uint heat, uint cool);
     void bind_key(uint add, uint sub, uint sure);
-    void bind_sensor(uint pin);
+    void bind_tempdetect(uint pin);
     void bind_image(Image* image);
     uint getTemp();
 private:
@@ -189,55 +185,6 @@ private:
 
         if(buffer >= uplimit)
             buffer = uplimit;
-    }
-
-    void light_detect()
-    {
-        static uint count = 0;
-        static uint buffer_tmp = buffer;
-        //此时正在设置温度
-        if(pre == buffer)
-        {
-            led_green->off();
-        }
-        if(buffer != pre)
-        {
-            //绿灯常量
-            led_green->on();
-            led_red->off();
-            //按键有效时间 30 * 10 ms
-            if(count++ < 30)
-            {   delay(10);
-                if(buffer != buffer_tmp)
-                {
-                  buffer_tmp = buffer;
-                  count = 0;
-                }
-            }
-                
-            else
-            {
-                buffer = pre;
-                led_green->flash();
-                count = 0;
-            }
-
-        }
-
-        //此时温度稳定
-        else if(buffer == pre && pre == temp)
-        {
-            //绿灯闪烁
-            led_green->flash();
-            led_red->off();
-        }
-
-        //正在加热
-        else if(pre != temp)
-        {
-            led_red->on();
-        }
-        else;
     }
 
     void stableTemp()
@@ -260,14 +207,19 @@ private:
                 switch(uint(pre > temp))
                 {
                 //加热
-                case 1: temp++;break;
+                case 1: temp++;m_heat->on();break;
                 //制冷
-                case 0: temp--;break;
+                case 0: temp--;m_cool->on();break;
                 }
             }
         }
         else
+        {
             lock = false;
+            m_heat->off();
+            m_cool->off();
+        }
+            
     }
 
     void display()
@@ -287,11 +239,10 @@ private:
         //绘制预设温度
         Pixel pre_image = {20, 100, 30, 150, 2, ILI9341_GREEN};
         draw_digital(pre_image, "SET : ", buffer);
-
     }
 
-    Light* led_red;
-    Light* led_green;
+    Sensor* m_heat;
+    Sensor* m_cool;
 
     Key* key_add;
     Key* key_sub;
@@ -301,9 +252,12 @@ private:
     uint pre;
     uint temp;
     uint sensor_pin;
+
     Image* m_image;
+
     const uint uplimit = 50;
     const uint downlimit = 5;
+
     bool lock;
 };
 
@@ -316,8 +270,8 @@ TempEngine::TempEngine()
 
 TempEngine::~TempEngine()
 {
-    free(led_green);
-    free(led_red);
+    free(m_heat);
+    free(m_cool);
 
     free(key_add);
     free(key_sub);
@@ -346,20 +300,19 @@ TempEngine::show()
     {
         this->temp = getTemp(); 
         this->key_detect();
-        this->light_detect();
         this->stableTemp();
         this->display();
     }
 }
 
 void 
-TempEngine::bind_light(uint red, uint green)
+TempEngine::bind_sensor(uint heat, uint cool)
 {
-    led_red = (Light* )malloc(sizeof(Light));
-    led_red->set_pin(red);
+    m_heat = (Sensor* )malloc(sizeof(Sensor));
+    m_heat->set_pin(heat);
 
-    led_green = (Light* )malloc(sizeof(Light));
-    led_green->set_pin(green);
+    m_cool = (Sensor* )malloc(sizeof(Sensor));
+    m_cool->set_pin(cool);
 }
 
 void 
@@ -377,7 +330,7 @@ TempEngine::bind_key(uint add, uint sub, uint sure)
 }
 
 void 
-TempEngine::bind_sensor(uint pin)
+TempEngine::bind_tempdetect(uint pin)
 {
     sensor_pin = pin;
 }
@@ -408,8 +361,8 @@ void setup() {
 void loop() {
     TempEngine temp;
     temp.bind_key(4, 5, 6);
-    temp.bind_light(2, 3);
-    temp.bind_sensor(A0);
+    temp.bind_sensor(2, 3);
+    temp.bind_tempdetect(A0);
     temp.bind_image(&m_image);
 
     temp.show();
