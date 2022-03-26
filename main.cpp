@@ -46,7 +46,7 @@ void drawZone(uint x, uint y, uint high, uint wide, uint color)
 
 void draw_digital(Pixel pixel, char* str, uint var)
 {
-    drawZone(pixel.x,pixel.y,pixel.high,pixel.wide,ILI9341_BLACK);
+    drawZone(pixel.x + 70,pixel.y,pixel.high,pixel.wide,ILI9341_BLACK);
     m_image.setCursor(pixel.x,pixel.y);
     m_image.setTextColor(pixel.color);
     m_image.setTextSize(pixel.size);
@@ -54,6 +54,29 @@ void draw_digital(Pixel pixel, char* str, uint var)
       m_image.print(str);
     m_image.print(var);
 } 
+
+void logo_heat()
+{
+  drawZone(142,70,17,17,ILI9341_BLACK);
+  m_image.fillCircle(150 , 78 , 7, ILI9341_RED);
+  drawZone(142,70,17,17,ILI9341_BLACK);
+  delay(600);
+  m_image.fillCircle(150 , 78 , 7, ILI9341_RED);
+}
+
+void logo_cool()
+{
+  drawZone(142,70,17,17,ILI9341_BLACK);
+  m_image.fillCircle(150 , 78 , 7, ILI9341_GREEN);
+  drawZone(142,70,17,17,ILI9341_BLACK);
+  delay(600);
+  m_image.fillCircle(150 , 78 , 7, ILI9341_GREEN);
+}
+
+void logo_clear()
+{
+  drawZone(142,70,17,17,ILI9341_BLACK);
+}
 
 //类,测试完毕，OK
 class Sensor
@@ -194,7 +217,7 @@ private:
         if(pre != temp)
         {
             lock = true;
-            //仿真加热时间100 * 10
+            //仿真加热时间10 * 10
             if(count++ < 10 )
             {
                 delay(10);
@@ -207,9 +230,23 @@ private:
                 switch(uint(pre > temp))
                 {
                 //加热
-                case 1: temp++;m_heat->on();break;
+                case 1: 
+                {
+                  temp++;
+                  m_cool->off();
+                  m_heat->on();
+                  logo_heat();
+                  break;
+                }
                 //制冷
-                case 0: temp--;m_cool->on();break;
+                case 0: 
+                {
+                  temp--;
+                  m_heat->off();
+                  m_cool->on();
+                  logo_cool();
+                  break;
+                }
                 }
             }
         }
@@ -218,6 +255,7 @@ private:
             lock = false;
             m_heat->off();
             m_cool->off();
+            logo_clear();
         }
             
     }
@@ -234,10 +272,10 @@ private:
         Serial.print("LOCK : ");
         Serial.println(lock);
         //绘制温度
-        Pixel temp_image = {20, 70, 30, 150, 2, ILI9341_GREEN};
+        Pixel temp_image = {10, 70, 18, 30, 2, ILI9341_GREEN};
         draw_digital(temp_image, "TEMP: ", temp);
         //绘制预设温度
-        Pixel pre_image = {20, 100, 30, 150, 2, ILI9341_GREEN};
+        Pixel pre_image = {10, 100, 18, 30, 2, ILI9341_GREEN};
         draw_digital(pre_image, "SET : ", buffer);
     }
 
@@ -354,7 +392,6 @@ void setup() {
   m_image.setTextSize(2);
   m_image.println("     Control!       ");
   m_image.println("--------------------");
-
 
 }
 
