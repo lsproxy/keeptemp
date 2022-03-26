@@ -8,22 +8,22 @@
       {
         "type": "wokwi-ntc-temperature-sensor",
         "id": "ntc1",
-        "top": 106.51,
-        "left": 237.81,
+        "top": 242.63,
+        "left": -333.81,
         "attrs": {}
       },
       {
         "type": "wokwi-led",
         "id": "led1",
-        "top": 236.11,
-        "left": 257.52,
+        "top": 386.56,
+        "left": -242.77,
         "attrs": { "color": "red" }
       },
       {
         "type": "wokwi-led",
         "id": "led2",
-        "top": 236.5,
-        "left": 320.89,
+        "top": 567.89,
+        "left": -242.6,
         "attrs": { "color": "green" }
       },
       {
@@ -46,6 +46,20 @@
         "top": 652.65,
         "left": 399.92,
         "attrs": { "color": "green" }
+      },
+      {
+        "type": "wokwi-resistor",
+        "id": "r1",
+        "top": 463.38,
+        "left": -324.68,
+        "attrs": { "value": "1000" }
+      },
+      {
+        "type": "wokwi-resistor",
+        "id": "r2",
+        "top": 646.35,
+        "left": -329.91,
+        "attrs": { "value": "1000" }
       }
     ],
     "connections": [
@@ -59,15 +73,17 @@
       [ "uno:GND.3", "ntc1:GND", "black", [ "v28.3", "h239.02", "v-426.19" ] ],
       [ "uno:5V", "ntc1:VCC", "red", [ "v39.94", "h269.81", "v-426.15" ] ],
       [ "ntc1:OUT", "uno:A0", "green", [ "h13.98", "v390.11", "h-192.25" ] ],
-      [ "uno:3.3V", "led1:A", "green", [ "v67.43", "h-2.22" ] ],
-      [ "uno:3.3V", "led2:A", "green", [ "v81.47", "h2.69" ] ],
       [ "uno:GND.2", "btn1:1.l", "black", [ "v105.21", "h-89.93" ] ],
       [ "uno:GND.2", "btn2:1.l", "black", [ "v89.97", "h75.88", "v38.54" ] ],
       [ "uno:GND.2", "btn3:1.l", "black", [ "v103.42", "h240.79", "v25.99" ] ],
       [ "btn1:2.r", "uno:4", "green", [ "h0" ] ],
       [ "btn2:2.r", "uno:5", "green", [ "h17.1", "v-318.24", "h-117.41" ] ],
       [ "btn3:2.r", "uno:6", "green", [ "h22.82", "v-306.59", "h-298.45" ] ],
-      [ "led1:C", "uno:2", "green", [ "v37.47", "h-45.8" ] ],
-      [ "led2:C", "uno:3", "green", [ "v42.29", "h-121.54" ] ]
+      [ "uno:2", "led1:A", "green", [ "v-41.72", "h-425.17", "v171.11", "h-57.87" ] ],
+      [ "led1:C", "r1:2", "green", [ "v0" ] ],
+      [ "r1:1", "uno:GND.2", "green", [ "v38.08", "h281.73", "v67.07", "h201.32" ] ],
+      [ "uno:3", "led2:A", "green", [ "v-29.11", "h-402.03", "v340.87", "h-70.27" ] ],
+      [ "led2:C", "r2:2", "green", [ "v0" ] ],
+      [ "r2:1", "uno:GND.2", "green", [ "v45.67", "h284.43", "v-97.18", "h203.33" ] ]
     ]
   }
