@@ -95,7 +95,7 @@ public:
     Sensor(){}  //构造
     ~Sensor();  //析构
 
-    void on();      //开
+    void on(uint pre, uint temp);      //开
     void off();     //关
 
     Switch value(); //获取当前Sensor状态
@@ -119,16 +119,21 @@ Sensor::~Sensor()
 }
 
 void 
-Sensor::on() 
+Sensor::on(uint pre, uint temp) 
 {
-    digitalWrite(m_pin, HIGH);
+    int t = pre - temp;
+    float value = abs(t);
+    value = (value * 10.0) / 50.0;
+    value = value > 1 ? 1 : value;
+    analogWrite(m_pin, (int)(value * 1024));
     status = ON;
 }
 
 void 
 Sensor::off()
 {
-    digitalWrite(m_pin, LOW);
+
+    analogWrite(m_pin, 0);
     status = OFF;
 }
 
@@ -195,6 +200,9 @@ Key::set_pin(const uint& pin)
 class StableEngine
 {
 public:
+    static const uint uplimit = 50;    //默认可设置温度上限
+    static const uint downlimit = 5;   //默认可设置温度下限
+public:
     StableEngine(); //构造
     ~StableEngine();    //析构
     void show();    //运行程序
@@ -218,16 +226,12 @@ private:
     Key* key_sub;
     Key* key_sure;
 
-
-    uint buffer;    //温度设置缓冲
     uint pre;    //预设定温度
     uint temp;    //当前温度
+    uint buffer;     //温度设置缓冲
     uint sensor_pin;    //温度传感器pin
 
     Image* m_image;     //图像绘制对象
-
-    const uint uplimit = 50;    //默认可设置温度上限
-    const uint downlimit = 5;   //默认可设置温度下限
 
     bool lock;      //用于模拟升温的变量，其作用为，
                     //当已获取传感器温度且与与设定温度有差异则锁定从传感器获取温度，
@@ -359,7 +363,7 @@ StableEngine::stableTemp()
             {
                 temp++;
                 m_cool->off();
-                m_heat->on();
+                m_heat->on(pre, temp);
                 logo_heat();
                 break;
             }
@@ -368,7 +372,7 @@ StableEngine::stableTemp()
             {
                 temp--;
                 m_heat->off();
-                m_cool->on();
+                m_cool->on(pre, temp);
                 logo_cool();
                 break;
             }
